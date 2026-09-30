@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 class IdlixScrapper:
     def __init__(self):
-        self.API = 'https://94.103.82.88'
+        self.API = 'https://z2.idlixku.com'
 
     def get_genre(self):
         """
