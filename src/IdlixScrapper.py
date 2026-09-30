@@ -1,15 +1,14 @@
 import requests
 from bs4 import BeautifulSoup
-
+from urllib.parse import unquote  # FIX 1: Import unquote untuk memproses nama video
 
 class IdlixScrapper:
     def __init__(self):
+        # FIX 2: Mengganti IP lama dengan URL baru dan menambahkan BASE_WEB_URL
         self.API = 'https://z2.idlixku.com'
+        self.BASE_WEB_URL = 'https://z2.idlixku.com'
 
     def get_genre(self):
-        """
-        Get genre
-        """
         r = requests.get(self.API + '/genre/')
         soup = BeautifulSoup(r.text, 'html.parser')
         genre = soup.find('div', class_='container').find_all('a')
@@ -19,9 +18,6 @@ class IdlixScrapper:
         return data_genre
 
     def get_movie_in_genre(self, genre, page=1):
-        """
-        Get the movie in the genre
-        """
         r = requests.get(self.API + '/genre/' + genre + '/page/' + str(page))
         soup = BeautifulSoup(r.text, 'html.parser')
         movie = soup.findAll('article', class_='item movies')
@@ -36,13 +32,9 @@ class IdlixScrapper:
                 'date': i.find('div', class_='data').find('span').text,
                 'link': i.find('div', class_='data').find('a').get('href')
             })
-
         return data_movie
 
     def get_movie_tranding(self, page=1):
-        """
-        Get the movie tranding
-        """
         r = requests.get(self.API + '/trending/page/' + str(page) + '/?get=movies')
         soup = BeautifulSoup(r.text, 'html.parser')
         movie = soup.findAll('article', class_='item movies')
@@ -57,23 +49,16 @@ class IdlixScrapper:
                 'date': i.find('div', class_='data').find('span').text,
                 'link': i.find('div', class_='data').find('a').get('href')
             })
-
         return data_movie
 
     def get_info_movie(self, link):
-        """
-        Get info movie
-        """
         r = requests.get(self.API + '/movie/' + link + '/')
         soup = BeautifulSoup(r.text, 'html.parser')
 
-        # get tag movie
         tag_content = soup.find('div', class_='sgeneros')
         content_tag = []
         for i in tag_content:
-            content_tag.append(
-                i.findNext('a').text
-            )
+            content_tag.append(i.findNext('a').text)
 
         if soup.find('span', class_='CR rated'):
             rating = soup.find('span', class_='CR rated').text
@@ -84,6 +69,7 @@ class IdlixScrapper:
             tagline = soup.find('span', class_='tagline').text
         else:
             tagline = '-'
+            
         return {
             'img': soup.find('div', class_='poster').find('img').get('src'),
             'title': soup.find('div', class_='data').find('h1').text,
@@ -97,9 +83,6 @@ class IdlixScrapper:
         }
 
     def get_tv_trending(self, page=1):
-        """
-        Get the tv tranding
-        """
         r = requests.get(self.API + '/trending/page/' + str(page) + '/?get=tv')
         soup = BeautifulSoup(r.text, 'html.parser')
         movie = soup.findAll('article', class_='item tvshows')
@@ -113,24 +96,16 @@ class IdlixScrapper:
                 'date': i.find('div', class_='data').find('span').text,
                 'link': i.find('div', class_='data').find('a').get('href')
             })
-
         return data_movie
 
     def get_info_tv(self, link):
-        """
-        Get info tv
-        """
         r = requests.get(self.API + '/tvseries/' + link + '/')
         soup = BeautifulSoup(r.text, 'html.parser')
 
-        # get tag movie
         content_tag = []
         for i in soup.find('div', class_='sgeneros'):
-            content_tag.append(
-                i.findNext('a').text
-            )
+            content_tag.append(i.findNext('a').text)
 
-        # get info sessions
         data_sessions = []
         for i in soup.findAll('div', class_='se-c'):
             for j in i.find('ul', class_='episodios').findAll('li'):
@@ -166,9 +141,6 @@ class IdlixScrapper:
         }
 
     def get_network_netflix(self, page=1):
-        """
-        Get netflix series
-        """
         r = requests.get(self.API + '/network/netflix/page/' + str(page) + '/')
         soup = BeautifulSoup(r.text, 'html.parser')
         movie = soup.findAll('article', class_='item tvshows')
@@ -185,9 +157,6 @@ class IdlixScrapper:
         return data_movie
 
     def get_serial_tv(self, page=1):
-        """
-        Get serial tv series
-        """
         r = requests.get(self.API + '/tvseries/page/' + str(page) + '/')
         soup = BeautifulSoup(r.text, 'html.parser')
         movie = soup.findAll('article', class_='item tvshows')
@@ -201,13 +170,9 @@ class IdlixScrapper:
                 'date': i.find('div', class_='data').find('span').text,
                 'link': i.find('div', class_='data').find('a').get('href')
             })
-
         return data_movie
 
     def get_movie_series(self, page=1):
-        """
-        Get the movie series
-        """
         r = requests.get(self.API + '/movie/page/' + str(page) + '/')
         soup = BeautifulSoup(r.text, 'html.parser')
         movie = soup.find('div', class_='animation-2 items full').findAll('article', class_='item movies')
@@ -221,5 +186,93 @@ class IdlixScrapper:
                 'date': i.find('div', class_='data').find('span').text,
                 'link': i.find('div', class_='data').find('a').get('href')
             })
-
         return data_movie
+
+    # ==========================================
+    # Fungsi Baru yang Sudah Diperbaiki
+    # ==========================================
+    def get_video_data(self, url):
+        if not url:
+            return {'status': False, 'message': 'URL is required'}
+
+        if not url.startswith(self.BASE_WEB_URL):
+            return {'status': False, 'message': 'Invalid URL'}
+
+        # FIX 3: Ganti self.request.get menjadi requests.get
+        request = requests.get(url=url)
+        if request.status_code != 200:
+            return {'status': False, 'message': 'Failed to get video page'}
+
+        bs = BeautifulSoup(request.text, 'html.parser')
+
+        # ----------------------------------------------------------------------
+        # 1. GET VIDEO ID (fallback untuk episode / tvseries)
+        # ----------------------------------------------------------------------
+        meta_postid = bs.find('meta', {'id': 'dooplay-ajax-counter'})
+        if not meta_postid:
+            # Fallback lain: some themes use data-post-id
+            post_id_holder = bs.find(attrs={'data-postid': True})
+            if post_id_holder:
+                self.video_id = post_id_holder['data-postid']
+            else:
+                return {'status': False, 'message': 'Video ID not found'}
+        else:
+            self.video_id = meta_postid.get('data-postid')
+
+        # ----------------------------------------------------------------------
+        # 2. GET TITLE (ROBUST)
+        # ----------------------------------------------------------------------
+        video_name = None
+
+        # Try itemprop="name"  (movie)
+        meta_name = bs.find('meta', {'itemprop': 'name'})
+        if meta_name:
+            video_name = meta_name.get('content')
+
+        # Try og:title (episodes)
+        if not video_name:
+            og_title = bs.find('meta', {'property': 'og:title'})
+            if og_title:
+                video_name = og_title.get('content')
+
+        # Try title tag
+        if not video_name and bs.title:
+            video_name = bs.title.text
+
+        # Try h1
+        if not video_name:
+            h1 = bs.find('h1')
+            if h1:
+                video_name = h1.get_text(strip=True)
+
+        # Last fallback
+        if not video_name:
+            video_name = "Unknown_Title"
+
+        self.video_name = unquote(video_name)
+
+        # ----------------------------------------------------------------------
+        # 3. GET POSTER (fallbacks)
+        # ----------------------------------------------------------------------
+        poster = None
+        itemprop_img = bs.find('img', {'itemprop': 'image'})
+        if itemprop_img:
+            poster = itemprop_img.get('src')
+
+        if not poster:
+            og_image = bs.find('meta', {'property': 'og:image'})
+            if og_image:
+                poster = og_image.get('content')
+
+        if not poster:
+            poster = ""
+
+        self.poster = poster
+
+        # DONE
+        return {
+            'status': True,
+            'video_id': self.video_id,
+            'video_name': self.video_name,
+            'poster': self.poster
+        }
