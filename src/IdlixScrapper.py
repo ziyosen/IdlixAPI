@@ -5,7 +5,7 @@ from urllib.parse import unquote  # FIX 1: Import unquote untuk memproses nama v
 class IdlixScrapper:
     def __init__(self):
         # FIX 2: Mengganti IP lama dengan URL baru dan menambahkan BASE_WEB_URL
-        self.API = 'https://z2.idlixku.com'
+        self.API = 'https://app.idlixku.com'
         self.BASE_WEB_URL = 'https://z2.idlixku.com'
 
     def get_genre(self):
